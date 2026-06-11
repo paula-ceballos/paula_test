@@ -5,3 +5,7 @@ test repository for git / github lesson
 
 - Create a remote repository on GitHub.
 - Practice workflow. 
+
+## Creator
+
+I am a integrative biology major. 
