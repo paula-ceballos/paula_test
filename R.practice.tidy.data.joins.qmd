@@ -1,0 +1,113 @@
+---
+title: "R Practice: Tidy Data and Joins"
+format: html
+editor: visual
+---
+
+## Libraries 
+
+```{r}
+library(readr)
+library(dplyr)
+library(here)
+library(lubridate) # for bonus question
+
+# Quick question: Do you get a message after loading the libraries? What is it telling you? Talk to your neighbor about it or write a note in your qmd.
+```
+
+### Read in Data
+
+```{r}
+# read in data from the data directory after manually downloading data 
+bird_observations <- read_csv(here::here("data/52_pp52_birds_1.csv"))
+surveys <- read_csv(here::here("data/52_pp52_surveys_1.csv"))
+sites <- read_csv(here::here("data/52_pp52_sites_1.csv"))
+taxalist <- read_csv(here::here("data/52_pp52_taxalist_1.csv"))
+```
+
+### Exploring Bird Data
+
+```{r}
+# returns dimensions of the dataframe by number of rows and number of cols
+dim(bird_observations)
+
+# returns the top six rows of the dataframe
+head(bird_observations)
+
+# returns all the columns and some info about the cols
+glimpse(bird_observations)
+
+# similar to glimpse but returns some summary statistics about the cols
+summary(bird_observations)
+
+# returns column names 
+names(bird_observations)
+
+# returns unique values in a column. In this case we can see all the different bird species IDs
+unique(bird_observations$species_id)
+```
+
+### Creating a subset of bird observations
+
+```{r}
+birds_subset <- bird_observations %>% 
+  filter(species_id %in% c("BHCO", "RWBL")) %>% 
+  filter(site_id %in% c("LI-W", "NU-C"))
+```
+
+### Using function left_join() to merge my two data sets
+
+```{r}
+# syntax using pipe
+birds_left <- birds_subset %>% 
+  left_join(y = sites, by = "site_id")
+# don't see x = birds_subset here because piping in birds_subset means it automatically assumes birds_subset as x.
+
+# syntax without pipe
+birds_left <- left_join(x = birds_subset, y = sites, by = "site_id")
+```
+
+### Making birds_full data set with birds_subset and sites
+
+```{r}
+birds_full <- birds_subset %>% full_join(y= sites, by = "site_id")
+```
+
+### Inner_join() to merge data of birds subset and taxalist data
+
+```{r}
+birds_inner <- inner_join(x = birds_subset, y = taxalist, by = "species_id")
+```
+
+### Left_join() to merge data of birds subset and taxalist
+
+```{r}
+birds_inner_left <- left_join(x = birds_subset, y = taxalist, by = "species_id")
+```
+
+### Renaming 
+
+```{r}
+bird_observations <- bird_observations %>% rename(bird_obs_notes = notes)
+```
+
+```{r}
+bird_obs_subset <- bird_observations %>% 
+  full_join(y = taxalist, by = "species_id") %>% 
+  full_join(y = sites, by = "site_id") %>% 
+  full_join(y = surveys, by = c("site_id", "survey_id")) %>%  
+  select(survey_date, common_name, park_name, bird_count, observer)
+```
+
+```{r}
+unique(bird_obs_subset$observer)
+```
+
+```{r}
+bird_obs_subset <- bird_obs_subset %>% 
+  mutate(observer = if_else(condition = observer == "Josh Burns", 
+                            true = "J. Burns", 
+                            false = observer))
+
+unique(bird_obs_subset$observer)
+```
